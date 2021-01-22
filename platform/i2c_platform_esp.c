@@ -29,7 +29,7 @@ I2C_Master_t *I2C_Master = (I2C_Master_t *) NULL;
 
 void i2c_scan()
 {
-    printf("\r\n i2c device scan: ");
+    printf("\r\nI2C device scan: ");
     for (uint8_t i = 1; i < 127; i++)
     {
         int ret;
@@ -41,9 +41,9 @@ void i2c_scan()
         ret = i2c_master_cmd_begin(I2C_NUM_0, cmd, 100 / portTICK_RATE_MS);
         i2c_cmd_link_delete(cmd);
         if (ret != ESP_OK) continue;
-        printf(" 0x%02X |", test_address );
+        printf("0x%02X | ", test_address );
     }
-    printf( "\r\n scan completed." );
+    printf( "\r\n" );
 }
 
 I2C_Master_t *i2c_master_setup()

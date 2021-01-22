@@ -81,6 +81,7 @@ typedef struct {
 	uint8_t			distance_mode;
 	uint8_t			timing_budget;
 	uint8_t			inter_measurement;
+	char *			name;
 
 	// measurement:
 	int64_t     	time_stamp;
