@@ -206,6 +206,23 @@ VL53L1X_ERROR VL53L1X_SetFastI2C(uint16_t dev)
     return VL53L1_WrByte(dev, VL53L1_PAD_I2C_HV__CONFIG, 0x14 );
 }
 
+/**
+ * 	fields: \n
+ *		- [1:0] = scheduler_mode
+ *		- [3:2] = readout_mode
+ *		-   [4] = mode_range__single_shot
+ *		-   [5] = mode_range__back_to_back
+ *		-   [6] = mode_range__timed
+ *		-   [7] = mode_range__abort 
+ */
+VL53L1X_ERROR VL53L1X_SetRangingMode(uint16_t dev, uint8_t set_ranging_mode)
+{
+    uint8_t mode_start;
+    VL53L1_RdByte(dev, VL53L1_SYSTEM__MODE_START, &mode_start );
+    mode_start = ( mode_start & 0x0F ) | set_ranging_mode;
+    return VL53L1_WrByte(dev, VL53L1_SYSTEM__MODE_START, mode_start );
+}
+
 VL53L1X_ERROR VL53L1X_SystemStatus(uint16_t dev, uint8_t *state)
 {
 	return VL53L1_RdByte(dev, VL53L1_FIRMWARE__SYSTEM_STATUS, state);
@@ -258,9 +275,6 @@ VL53L1X_ERROR VL53L1X_GetAndRestartMeasurement(uint16_t dev, uint8_t *rangeStatu
 	//	VL53L1X_GetDistance(dev, &Distance)
 	VL53L1_RdWord(dev, VL53L1_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD0, distanceMM);
 
-    //  VL53L1X_StopRanging(dev)
-	VL53L1_WrByte(dev, SYSTEM__MODE_START, 0x00);
-
     //  VL53L1X_StartRanging(dev)
     VL53L1_WrByte(dev, SYSTEM__MODE_START, 0x40);
 
@@ -283,9 +297,10 @@ VL53L1X_ERROR VL53L1X_InitSensorArray(VL53L1_DEV sensor_array, uint8_t sensor_co
         sensor_array[k].range_status = 0;
         sensor_array[k].range_error = VL53L1_ERROR_NONE;
     }
-    vTaskDelay( 200 / portTICK_PERIOD_MS );
+    vTaskDelay( 100 / portTICK_PERIOD_MS );
 
     for ( k = 0; k < sensor_count; k++ ) {
+
         // enable this device and wait for it to boot up
         digitalWrite( sensor_array[k].shutdown_pin, HIGH );
         timeout_check = sensorState = 0;
@@ -294,19 +309,24 @@ VL53L1X_ERROR VL53L1X_InitSensorArray(VL53L1_DEV sensor_array, uint8_t sensor_co
             VL53L1X_BootState( VL53L1_I2C_ADDRESS, &sensorState );
             if ( ++timeout_check > 10 ) return VL53L1_ERROR_TIME_OUT;
         }
+
         // initialize the device
         VL53L1X_SensorInit( VL53L1_I2C_ADDRESS );
+
         // change it's I2C address and use that new I2C address from now on
         VL53L1X_SetI2CAddress( VL53L1_I2C_ADDRESS, sensor_array[k].I2cDevAddr );
+
         // configure the device
         VL53L1X_SetFastI2C( sensor_array[k].I2cDevAddr );
         VL53L1X_SetDistanceMode( sensor_array[k].I2cDevAddr, sensor_array[k].distance_mode );
         VL53L1X_SetTimingBudgetInMs( sensor_array[k].I2cDevAddr, sensor_array[k].timing_budget );       
-        VL53L1X_SetInterMeasurementInMs( sensor_array[k].I2cDevAddr, sensor_array[k].inter_measurement );   
+        VL53L1X_SetInterMeasurementInMs( sensor_array[k].I2cDevAddr, sensor_array[k].inter_measurement ); 
+        VL53L1X_SetRangingMode( sensor_array[k].I2cDevAddr, RANGING_MODE_SINGLE_SHOT );
+
         // kick off measurement cycle
         VL53L1X_StartRanging( sensor_array[k].I2cDevAddr );   
-        vTaskDelay( sensor_array[k].inter_measurement / portTICK_PERIOD_MS );
     }
+    vTaskDelay( 100 / portTICK_PERIOD_MS );
 
 	return VL53L1_ERROR_NONE;
 }

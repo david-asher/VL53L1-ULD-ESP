@@ -32,6 +32,11 @@ extern "C"
 #define	DISTANCE_MODE_SHORT			(1)			// up to 1 meter
 #define	DISTANCE_MODE_LONG			(2)			// up to 4 meters
 
+#define RANGING_MODE_SINGLE_SHOT	(0x10)
+#define RANGING_MODE_BACK_TO_BACK	(0x20)
+#define RANGING_MODE_TIMED			(0x40)
+#define RANGING_MODE_ABORT			(0x80)
+
 /** @defgroup VL53L1_define_RangeStatus_group Defines the Range Status
  *	@{
  */
@@ -189,6 +194,8 @@ int8_t VL53L1_WaitMs(
 // other useful device functions
 
 VL53L1X_ERROR VL53L1X_SetFastI2C(uint16_t dev);
+
+VL53L1X_ERROR VL53L1X_SetRangingMode(uint16_t dev, uint8_t set_ranging_mode);
 
 VL53L1X_ERROR VL53L1X_SystemStatus(uint16_t dev, uint8_t *state);
 
