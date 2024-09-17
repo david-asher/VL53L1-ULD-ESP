@@ -13,7 +13,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "gpio_platform_esp.h"
-
+#include "esp_timer.h"
 /**
  * These functions emulate Arduino general pin IO,
  * leaving the original source code intact.
