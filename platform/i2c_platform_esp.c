@@ -38,7 +38,7 @@ void i2c_scan()
         ESP_ERROR_CHECK( i2c_master_start(cmd) );
         ESP_ERROR_CHECK( i2c_master_write_byte(cmd, test_address | I2C_MASTER_WRITE, 1) );
         ESP_ERROR_CHECK( i2c_master_stop(cmd) );
-        ret = i2c_master_cmd_begin(I2C_NUM_0, cmd, 100 / portTICK_RATE_MS);
+        ret = i2c_master_cmd_begin(I2C_NUM_0, cmd, 100 / portTICK_PERIOD_MS);
         i2c_cmd_link_delete(cmd);
         if (ret != ESP_OK) continue;
         printf("0x%02X | ", test_address );
@@ -75,6 +75,7 @@ void i2c_init_driver()
     conf.scl_io_num = I2C_Master->pin_scl;
     conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
     conf.master.clk_speed = I2C_Master->freq;
+    conf.clk_flags = I2C_SCLK_SRC_FLAG_FOR_NOMAL;
     ESP_ERROR_CHECK( i2c_param_config( I2C_Master->port, &conf ) );
     ESP_ERROR_CHECK( i2c_driver_install( I2C_Master->port, conf.mode, 0, 0, 0 ) );
 }
@@ -171,7 +172,7 @@ size_t i2c_read( uint8_t *pByteBuffer, size_t NumByteToRead )
 esp_err_t i2c_transmit()
 {
     ESP_ERROR_CHECK( i2c_master_stop( I2C_Master->cmd_handle ) );
-    esp_err_t i2c_error = i2c_master_cmd_begin(I2C_Master->port, I2C_Master->cmd_handle, 1000 / portTICK_RATE_MS);
+    esp_err_t i2c_error = i2c_master_cmd_begin(I2C_Master->port, I2C_Master->cmd_handle, 1000 / portTICK_PERIOD_MS);
     i2c_cmd_link_delete( I2C_Master->cmd_handle );
     I2C_Master->dev_address = I2C_NO_DEVICE;
     I2C_Master->cmd_handle = (i2c_cmd_handle_t) NULL;
